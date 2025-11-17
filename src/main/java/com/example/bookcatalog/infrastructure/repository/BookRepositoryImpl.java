@@ -2,10 +2,10 @@ package com.example.bookcatalog.infrastructure.repository;
 
 import com.example.bookcatalog.domain.model.Book;
 import com.example.bookcatalog.domain.repository.BookRepository;
-import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,11 +16,13 @@ public class BookRepositoryImpl implements BookRepository{
     private EntityManager em;
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Book> findById(Long id) {
         return Optional.ofNullable(em.find(Book.class, id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Book> findByIsbn(String isbn) {
         List<Book> result = em.createQuery(
                         "SELECT b FROM Book b WHERE b.isbn = :isbn",
@@ -32,31 +34,37 @@ public class BookRepositoryImpl implements BookRepository{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Book> findAll() {
         return em.createQuery("SELECT b FROM Book b", Book.class)
                 .getResultList();
     }
 
     @Override
+    @Transactional
     public Book save(Book book) {
         if (book.getId() == null){
             em.persist(book);
+            return book;
+        }else {
+            return em.merge(book);
         }
-        return em.merge(book);
     }
 
     @Override
+    @Transactional
     public void delete(Book book) {
         em.remove(em.contains(book) ? book : em.merge(book));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean existsByIsbn(String isbn) {
-        Boolean exists = em.createQuery(
-                        "SELECT COUNT(b) > 0 FROM Book b WHERE b.isbn = :isbn",
-                        Boolean.class)
+        Long count = em.createQuery(
+                        "SELECT COUNT(b) FROM Book b WHERE b.isbn = :isbn",
+                        Long.class)
                 .setParameter("isbn", isbn)
                 .getSingleResult();
-        return exists;
+        return count !=null && count > 0;
     }
 }

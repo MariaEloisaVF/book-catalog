@@ -4,13 +4,18 @@ import com.example.bookcatalog.application.service.BookService;
 import com.example.bookcatalog.domain.model.Book;
 import com.example.bookcatalog.webinterface.dto.BookRequest;
 import com.example.bookcatalog.webinterface.dto.BookResponse;
+import com.example.bookcatalog.application.exceptions.BookNotFoundException;
+import com.example.bookcatalog.application.exceptions.DuplicateISBNException;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
 
 import java.net.URI;
 import java.util.List;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/books")
@@ -35,7 +40,7 @@ public class BookController {
         Book saved = service.create(book);
 
         return ResponseEntity
-                .created(URI.create("/api/books" + saved.getId()))
+                .created(URI.create("/api/books/" + saved.getId()))
                 .body(toResponse(saved));
     }
 
@@ -86,6 +91,27 @@ public class BookController {
                 b.getIsbn(),
                 b.getYear(),
                 b.getQuantity()
+        );
+    }
+
+    @ExceptionHandler(BookNotFoundException.class)
+    public ResponseEntity<?> handleNotFound(BookNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(error(HttpStatus.NOT_FOUND, ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateISBNException.class)
+    public ResponseEntity<?> handleDuplicate(DuplicateISBNException ex){
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(error(HttpStatus.BAD_REQUEST, ex.getMessage()));
+    }
+
+    private Map<String, Object> error(HttpStatus status, String message){
+        return Map.of(
+                "timestamp", LocalDateTime.now().toString(),
+                "status", status.value(),
+                "error", status.getReasonPhrase(),
+                "message", message
         );
     }
 }

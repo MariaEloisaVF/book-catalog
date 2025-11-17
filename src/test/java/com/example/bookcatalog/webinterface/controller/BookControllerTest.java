@@ -12,6 +12,8 @@ import org.mockito.Mockito;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -54,7 +56,7 @@ public class BookControllerTest {
     @Test
     void listAllBooks() throws Exception{
         when(service.listAll()).thenReturn(
-                java.util.List.of(
+                List.of(
                         new Book(1L, "Title A", "Author A", "111", 2021, 5),
                         new Book(2L, "Title B", "Author B", "222", 2023, 9)
                 )
@@ -67,7 +69,7 @@ public class BookControllerTest {
     }
 
     @Test
-    void getBookById() throws Exception{
+    void getBookByIdSuccessfully() throws Exception{
         when(service.getById(1L))
                 .thenReturn(new Book(1L, "Title A", "Author A", "111", 2021, 5));
         mockMvc.perform(get("/api/books/1"))
@@ -85,12 +87,13 @@ public class BookControllerTest {
     }
 
     @Test
-    void updateBook() throws Exception{
-        Book updated = new Book(1L, "Title A", "Author A", "111", 2021, 5);
+    void updateBookSuccessfully() throws Exception{
+        Book updated = new Book(1L, "New", "Author B", "111", 2020, 12);
 
         BookRequest req = new BookRequest();
         req.setTitle("New");
         req.setAuthor("Author B");
+        req.setIsbn("111");
         req.setYear(2020);
         req.setQuantity(12);
 
@@ -103,7 +106,7 @@ public class BookControllerTest {
     }
 
     @Test
-    void deleteBook() throws Exception {
+    void deleteBookSuccessfully() throws Exception {
         mockMvc.perform(delete("/api/books/1"))
                 .andExpect(status().isNoContent());
     }
@@ -113,6 +116,15 @@ public class BookControllerTest {
         when(service.getById(99L))
                 .thenThrow(new BookNotFoundException("Book not found"));
         mockMvc.perform(get("/api/books/99"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteBookNotFound() throws Exception{
+        Mockito.doThrow(new BookNotFoundException("Not found"))
+                .when(service).delete(99L);
+
+        mockMvc.perform(delete("/api/books/99"))
                 .andExpect(status().isNotFound());
     }
 }

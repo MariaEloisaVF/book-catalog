@@ -40,13 +40,13 @@ public class BookService {
     @Transactional(readOnly = true)
     public Book findByIsbn(String isbn) {
         return repo.findByIsbn(isbn)
-                .orElseThrow(() -> new RuntimeException("Book with ISBN " + isbn + " not found"));
+                .orElseThrow(() -> new BookNotFoundException("Book with ISBN " + isbn + " not found"));
     }
 
     @Transactional
     public Book update(Long id, Book updatedBook) {
         Book existing = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Book not found"));
+                .orElseThrow(() -> new BookNotFoundException("Book not found"));
 
         if (!existing.getIsbn().equals(updatedBook.getIsbn())
                 && repo.existsByIsbn(updatedBook.getIsbn())) {
@@ -65,7 +65,7 @@ public class BookService {
     @Transactional
     public void delete(Long id) {
         Book book = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Book not found"));
+                .orElseThrow(() -> new BookNotFoundException("Book not found"));
         repo.delete(book);
     }
 }

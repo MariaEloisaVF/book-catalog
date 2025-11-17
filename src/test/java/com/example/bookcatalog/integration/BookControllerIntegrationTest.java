@@ -45,16 +45,22 @@ public class BookControllerIntegrationTest {
     }
 
     @Test
-    void getBookById() throws Exception{
+    void getBookByIdSuccessfully() throws Exception{
         Book saved = repository.save(new Book(null, "Title B", "Author B", "222", 2023, 5));
 
-        mockMvc.perform(get("/api/books" + saved.getId()))
+        mockMvc.perform(get("/api/books/" + saved.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title", is("Title B")));
     }
 
     @Test
-    void getByISBN() throws Exception{
+    void returnNotFound() throws Exception{
+        mockMvc.perform(get("/api/books/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getByISBNSuccessfully() throws Exception{
         Book saved = repository.save(new Book(null, "Title C", "Author C", "333", 2023, 5));
 
         mockMvc.perform(get("/api/books/isbn/333"))
@@ -63,7 +69,7 @@ public class BookControllerIntegrationTest {
     }
 
     @Test
-    void updateBook() throws Exception{
+    void updateBookSuccessfully() throws Exception{
         Book saved = repository.save(new Book(null, "Title D", "Author D", "444", 2023, 5));
         saved.setTitle("New");
 
@@ -75,7 +81,7 @@ public class BookControllerIntegrationTest {
     }
 
     @Test
-    void deleteBook() throws Exception{
+    void deleteBookSuccessfully() throws Exception{
         Book saved = repository.save(new Book(null, "Title E", "Author E", "555", 2023, 5));
 
         mockMvc.perform(delete("/api/books/" + saved.getId()))
